@@ -105,5 +105,4 @@ app = FastAPI()
 def redirect_to_gradio():
     return RedirectResponse(url="/app")
 
-# Mount Gradio at /gradio
 app = mount_gradio_app(app, gradio_app, path="/app")
