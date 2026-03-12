@@ -15,7 +15,8 @@ with gr.Blocks() as chat_app:
     api_key_input = gr.Textbox(
         show_label=False, 
         placeholder="OpenAI API Key (required)",
-        type="password"
+        type="password",
+        value=get_api_key()
     )
     api_key_input.change(fn=update_api_key_state, inputs=api_key_input, outputs=None)
     
