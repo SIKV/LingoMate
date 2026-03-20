@@ -5,6 +5,9 @@ from gradio.routes import mount_gradio_app
 from chat import *
 from settings import *
 
+_JS_SAVE_API_KEY = "(key) => { localStorage.setItem('lingomate_api_key', key); return [key]; }"
+_JS_LOAD_API_KEY = "() => [localStorage.getItem('lingomate_api_key') || '']"
+
 # Chat interface.
 with gr.Blocks() as chat_app:
     def update_api_key_state(value):
@@ -18,7 +21,7 @@ with gr.Blocks() as chat_app:
         type="password",
         value=get_api_key()
     )
-    api_key_input.change(fn=update_api_key_state, inputs=api_key_input, outputs=None)
+    api_key_input.change(fn=update_api_key_state, inputs=api_key_input, outputs=None, js=_JS_SAVE_API_KEY)
     
     start_new_chat_btn = gr.Button("✨ Start New Chat")
 
@@ -97,6 +100,18 @@ with gr.Blocks(theme=gr.themes.Soft()) as gradio_app:
         chat_app.render()
     with gr.Tab("Settings"):
         settings_app.render()
+
+    def restore_api_key(stored_key):
+        if stored_key:
+            set_api_key(stored_key)
+            return stored_key
+        return gr.update()
+
+    gradio_app.load(
+        fn=restore_api_key,
+        outputs=[api_key_input],
+        js=_JS_LOAD_API_KEY
+    )
 
 # FastAPI app
 app = FastAPI()

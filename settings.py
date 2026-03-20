@@ -18,7 +18,7 @@ class ChatLength(Enum):
 _SETTINGS_FILE = os.path.expanduser("~/.lingomate_settings.json")
 
 _DEFAULTS = {
-    "api_key": os.environ.get("OPENAI_API_KEY", ""),
+    "api_key": "",
     "chat_length": ChatLength.MEDIUM.value,
     "show_en_translation": True
 }
