@@ -39,13 +39,20 @@ def _get_response(api_key, system_message, history):
         messages = history
     
     response = ""
- 
-    try:
-        completion = client.chat.completions.create(model=_model, messages=[system] + messages)
-        response = completion.choices[0].message.content
-    except Exception as e:
-        response = "Something went wrong."
 
+    if not api_key:
+        response = "Please provide OpenAI API key."
+    else:
+        try:
+            completion = client.chat.completions.create(model=_model, messages=[system] + messages)
+            response = completion.choices[0].message.content
+        except Exception as e:
+            status_code = getattr(e, "status_code", None)
+            if status_code == 401:
+               response = "Invalid OpenAI API key."
+            else:
+               response = "Something went wrong."
+         
     messages.append({"role": "assistant", "content": response})
     return messages
 
