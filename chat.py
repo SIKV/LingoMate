@@ -1,4 +1,3 @@
-import gradio as gr
 from openai import OpenAI
 from settings import *
 
@@ -6,9 +5,9 @@ _model = "o4-mini"
 
 def _build_chat_system_message(chat_language, show_en_translation):
     return f"""
-    You are a friendly and patient {chat_language} language tutor. 
+    You are a friendly and patient {chat_language} language tutor.
     Your goal is to help me practice short, natural conversations in ${chat_language}.
-    
+
     Instructions:
         1. Start by suggesting a simple, friendly conversation topic. Be creative!
         2. Ask me one short question about this topic in {chat_language}. Keep it casual and natural.
@@ -20,9 +19,9 @@ def _build_chat_system_message(chat_language, show_en_translation):
 
 def _build_feedback_system_message(chat_language, show_en_translation):
     return f"""
-    You are a friendly and patient {chat_language} language tutor. 
+    You are a friendly and patient {chat_language} language tutor.
     Your goal is to provide a helpful feedback.
-    
+
     Instructions:
         1. Provide detailed feedback on my replies: correctness, vocabulary, sentence length, and fluency.
         2. Give me a score from 0 to 100.
@@ -37,7 +36,7 @@ def _get_response(api_key, system_message, history):
 
     if history is not None:
         messages = history
-    
+
     response = ""
 
     if not api_key:
@@ -49,43 +48,32 @@ def _get_response(api_key, system_message, history):
         except Exception as e:
             status_code = getattr(e, "status_code", None)
             if status_code == 401:
-               response = "Invalid OpenAI API key."
+                response = "Invalid OpenAI API key."
             else:
-               response = "Something went wrong."
-         
+                response = "Something went wrong."
+
     messages.append({"role": "assistant", "content": response})
     return messages
 
 def chat_clear_history():
     return []
-    
-def chat_start_new():
-    api_key = get_api_key()
+
+def chat_start_new(api_key, show_en_translation):
     chat_language = get_current_chat_language()
-    show_en_translation = get_show_en_translation()
-
-    response = _get_response(
+    return _get_response(
         api_key,
-        _build_chat_system_message(chat_language, show_en_translation), 
-         None,
+        _build_chat_system_message(chat_language, show_en_translation),
+        None,
     )
-    
-    return response
 
-def chat_send_assistant_answer(history):
-    chat_length_reached = len([msg for msg in history if msg["role"] == "user"]) >= get_chat_length_int()
-
-    api_key = get_api_key()
+def chat_send_assistant_answer(history, api_key, chat_length_value, show_en_translation):
+    chat_length_reached = len([msg for msg in history if msg["role"] == "user"]) >= ChatLength(chat_length_value).to_int()
     chat_language = get_current_chat_language()
-    show_en_translation = get_show_en_translation()
-
-    response = _get_response(
+    return _get_response(
         api_key,
-        _build_feedback_system_message(chat_language, show_en_translation) if chat_length_reached else _build_chat_system_message(chat_language, show_en_translation), 
-         history
+        _build_feedback_system_message(chat_language, show_en_translation) if chat_length_reached else _build_chat_system_message(chat_language, show_en_translation),
+        history
     )
-    
-    return response
 
 def chat_send_user_answer(message, history):
-   return "", history + [{"role": "user", "content": message}]
+    return "", history + [{"role": "user", "content": message}]
