@@ -5,7 +5,20 @@ from gradio.routes import mount_gradio_app
 from chat import *
 from settings import *
 
-with gr.Blocks(theme=gr.themes.Soft()) as gradio_app:
+theme = gr.themes.Soft(
+    primary_hue=gr.themes.colors.sky,
+    secondary_hue=gr.themes.colors.cyan,
+    neutral_hue=gr.themes.colors.slate,
+    font=[gr.themes.GoogleFont("Inter"), "ui-sans-serif", "sans-serif"],
+).set(
+    button_primary_background_fill="*primary_500",
+    button_primary_background_fill_hover="*primary_600",
+    button_primary_text_color="white",
+    button_primary_border_color="*primary_500",
+    button_primary_border_color_hover="*primary_600",
+)
+
+with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
     api_key_browser_state = gr.BrowserState("")
     api_key_state = gr.State("")
     chat_length_browser_state = gr.BrowserState(ChatLength.MEDIUM.value)
@@ -16,30 +29,30 @@ with gr.Blocks(theme=gr.themes.Soft()) as gradio_app:
         api_key_input = gr.Textbox(
             show_label=False,
             placeholder="OpenAI API Key (required)",
-            type="password"
+            type="password",
         )
         gr.Markdown("The API key is stored locally in your browser.")
-        start_new_chat_btn = gr.Button("✨ Start New Chat")
+        start_new_chat_btn = gr.Button("✨ Start New Chat", variant="primary")
         chatbot = gr.Chatbot(
             type="messages",
             label=get_current_chat_language(),
             show_copy_button=True,
-            placeholder="Please provide OpenAI API Key and press ✨ Start New Chat."
+            placeholder="Please provide OpenAI API Key and press ✨ Start New Chat.",
         )
         with gr.Row(equal_height=True):
             msg = gr.Textbox(placeholder="Type a message...", show_label=False)
-            submit_btn = gr.Button("Submit", scale=0)
+            submit_btn = gr.Button("Submit", scale=0, variant="primary")
 
     with gr.Tab("Settings"):
         chat_length_radio = gr.Radio(
             [ChatLength.SHORT.value, ChatLength.MEDIUM.value, ChatLength.LONG.value],
             show_label=False,
             info="Chat length",
-            value=ChatLength.MEDIUM.value
+            value=ChatLength.MEDIUM.value,
         )
         show_en_translation_checkbox = gr.Checkbox(
             label="Show English translation",
-            value=True
+            value=True,
         )
         gr.Markdown("Please start a new chat after changing any settings.")
 
@@ -60,7 +73,7 @@ with gr.Blocks(theme=gr.themes.Soft()) as gradio_app:
     gradio_app.load(
         restore_all,
         inputs=[api_key_browser_state, chat_length_browser_state, show_en_translation_browser_state],
-        outputs=[api_key_input, api_key_state, chat_length_radio, show_en_translation_checkbox]
+        outputs=[api_key_input, api_key_state, chat_length_radio, show_en_translation_checkbox],
     )
 
     api_key_input.change(save_api_key, inputs=[api_key_input], outputs=[api_key_browser_state, api_key_state])
