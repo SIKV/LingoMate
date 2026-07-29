@@ -1,8 +1,6 @@
 from openai import OpenAI
 from settings import *
 
-_model = "o4-mini"
-
 def _build_chat_system_message(practice_language, translation_language):
     translation_instruction = ""
     if should_translate(practice_language, translation_language):
@@ -42,7 +40,7 @@ def _build_feedback_system_message(practice_language, translation_language):
         { translation_instruction }
     """
 
-def _get_response(api_key, system_message, history):
+def _get_response(api_key, model, system_message, history):
     client = OpenAI(api_key=api_key)
 
     system = {"role": "system", "content": system_message}
@@ -57,7 +55,7 @@ def _get_response(api_key, system_message, history):
         response = "Please provide OpenAI API key."
     else:
         try:
-            completion = client.chat.completions.create(model=_model, messages=[system] + messages)
+            completion = client.chat.completions.create(model=model, messages=[system] + messages)
             response = completion.choices[0].message.content
         except Exception as e:
             status_code = getattr(e, "status_code", None)
@@ -72,17 +70,19 @@ def _get_response(api_key, system_message, history):
 def chat_clear_history():
     return []
 
-def chat_start_new(api_key, practice_language, translation_language):
+def chat_start_new(api_key, model, practice_language, translation_language):
     return _get_response(
         api_key,
+        model,
         _build_chat_system_message(practice_language, translation_language),
         None,
     )
 
-def chat_send_assistant_answer(history, api_key, chat_length_value, practice_language, translation_language):
+def chat_send_assistant_answer(history, api_key, model, chat_length_value, practice_language, translation_language):
     chat_length_reached = len([msg for msg in history if msg["role"] == "user"]) >= ChatLength(chat_length_value).to_int()
     return _get_response(
         api_key,
+        model,
         _build_feedback_system_message(practice_language, translation_language) if chat_length_reached else _build_chat_system_message(practice_language, translation_language),
         history
     )

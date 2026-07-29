@@ -21,6 +21,7 @@ theme = gr.themes.Soft(
 with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
     api_key_browser_state = gr.BrowserState("")
     api_key_state = gr.State("")
+    model_browser_state = gr.BrowserState(DEFAULT_MODEL)
     chat_length_browser_state = gr.BrowserState(ChatLength.MEDIUM.value)
     practice_language_browser_state = gr.BrowserState(DEFAULT_PRACTICE_LANGUAGE)
     translation_language_browser_state = gr.BrowserState(DEFAULT_TRANSLATION_LANGUAGE)
@@ -57,6 +58,12 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
             submit_btn = gr.Button("Submit", scale=0, variant="primary")
 
     with gr.Tab("Settings"):
+        model_dropdown = gr.Dropdown(
+            choices=get_model_choices(),
+            value=DEFAULT_MODEL,
+            label="Model",
+            filterable=True,
+        )
         chat_length_radio = gr.Radio(
             [ChatLength.SHORT.value, ChatLength.MEDIUM.value, ChatLength.LONG.value],
             show_label=False,
@@ -65,12 +72,13 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
         )
         gr.Markdown("Please start a new chat after changing any settings.")
 
-    def restore_all(saved_key, saved_length, saved_practice_language, saved_translation_language):
+    def restore_all(saved_key, saved_model, saved_length, saved_practice_language, saved_translation_language):
         practice_language = sanitize_practice_language(saved_practice_language)
         translation_language = sanitize_translation_language(saved_translation_language)
         return (
             saved_key,
             saved_key,
+            sanitize_model(saved_model),
             saved_length,
             practice_language,
             translation_language,
@@ -79,6 +87,10 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
 
     def save_api_key(value):
         return value, value
+
+    def save_model(value):
+        gr.Info("Settings updated.")
+        return value
 
     def save_chat_length(value):
         gr.Info("Settings updated.")
@@ -104,6 +116,7 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
         restore_all,
         inputs=[
             api_key_browser_state,
+            model_browser_state,
             chat_length_browser_state,
             practice_language_browser_state,
             translation_language_browser_state,
@@ -111,6 +124,7 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
         outputs=[
             api_key_input,
             api_key_state,
+            model_dropdown,
             chat_length_radio,
             practice_language_dropdown,
             translation_language_dropdown,
@@ -120,6 +134,7 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
 
     api_key_input.change(save_api_key, inputs=[api_key_input], outputs=[api_key_browser_state, api_key_state])
     # .input() rather than .change() so restoring saved settings on load doesn't fire the toasts.
+    model_dropdown.input(save_model, inputs=[model_dropdown], outputs=[model_browser_state])
     chat_length_radio.input(save_chat_length, inputs=[chat_length_radio], outputs=[chat_length_browser_state])
     practice_language_dropdown.input(
         save_practice_language,
@@ -134,17 +149,17 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
 
     msg.submit(chat_send_user_answer, [msg, chatbot], [msg, chatbot], queue=False).then(
         chat_send_assistant_answer,
-        [chatbot, api_key_state, chat_length_radio, practice_language_dropdown, translation_language_dropdown],
+        [chatbot, api_key_state, model_dropdown, chat_length_radio, practice_language_dropdown, translation_language_dropdown],
         chatbot,
     )
     submit_btn.click(chat_send_user_answer, [msg, chatbot], [msg, chatbot], queue=False).then(
         chat_send_assistant_answer,
-        [chatbot, api_key_state, chat_length_radio, practice_language_dropdown, translation_language_dropdown],
+        [chatbot, api_key_state, model_dropdown, chat_length_radio, practice_language_dropdown, translation_language_dropdown],
         chatbot,
     )
     start_new_chat_btn.click(chat_clear_history, outputs=[chatbot], queue=False).then(
         chat_start_new,
-        inputs=[api_key_state, practice_language_dropdown, translation_language_dropdown],
+        inputs=[api_key_state, model_dropdown, practice_language_dropdown, translation_language_dropdown],
         outputs=[chatbot],
     )
 
