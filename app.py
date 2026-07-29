@@ -22,8 +22,8 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
     api_key_browser_state = gr.BrowserState("")
     api_key_state = gr.State("")
     chat_length_browser_state = gr.BrowserState(ChatLength.MEDIUM.value)
-    # Stored as "true"/"false" string because gr.BrowserState doesn't reliably round-trip Python booleans through JSON serialization.
-    show_en_translation_browser_state = gr.BrowserState("true")
+    practice_language_browser_state = gr.BrowserState(DEFAULT_PRACTICE_LANGUAGE)
+    translation_language_browser_state = gr.BrowserState(DEFAULT_TRANSLATION_LANGUAGE)
 
     with gr.Tab("Chat"):
         api_key_input = gr.Textbox(
@@ -32,10 +32,23 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
             type="password",
         )
         gr.Markdown("The API key is stored locally in your browser.")
+        with gr.Row(equal_height=True):
+            practice_language_dropdown = gr.Dropdown(
+                choices=get_practice_language_choices(),
+                value=DEFAULT_PRACTICE_LANGUAGE,
+                label="I practice",
+                filterable=True,
+            )
+            translation_language_dropdown = gr.Dropdown(
+                choices=get_translation_language_choices(),
+                value=DEFAULT_TRANSLATION_LANGUAGE,
+                label="Translate to",
+                filterable=True,
+            )
         start_new_chat_btn = gr.Button("✨ Start New Chat", variant="primary")
         chatbot = gr.Chatbot(
             type="messages",
-            label=get_current_chat_language(),
+            label=get_language_label(DEFAULT_PRACTICE_LANGUAGE),
             show_copy_button=True,
             placeholder="Please provide OpenAI API Key and press ✨ Start New Chat.",
         )
@@ -50,14 +63,19 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
             info="Chat length",
             value=ChatLength.MEDIUM.value,
         )
-        show_en_translation_checkbox = gr.Checkbox(
-            label="Show English translation",
-            value=True,
-        )
         gr.Markdown("Please start a new chat after changing any settings.")
 
-    def restore_all(saved_key, saved_length, saved_translation):
-        return saved_key, saved_key, saved_length, saved_translation == "true"
+    def restore_all(saved_key, saved_length, saved_practice_language, saved_translation_language):
+        practice_language = sanitize_practice_language(saved_practice_language)
+        translation_language = sanitize_translation_language(saved_translation_language)
+        return (
+            saved_key,
+            saved_key,
+            saved_length,
+            practice_language,
+            translation_language,
+            gr.update(label=get_language_label(practice_language)),
+        )
 
     def save_api_key(value):
         return value, value
@@ -66,28 +84,68 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
         gr.Info("Settings updated.")
         return value
 
-    def save_show_en_translation(value):
-        gr.Info("Settings updated.")
-        return "true" if value else "false"
+    def _notify_language_change(practice_language, translation_language):
+        if should_translate(practice_language, translation_language):
+            gr.Info("Please start a new chat to apply the new languages.")
+        elif translation_language != NO_TRANSLATION:
+            gr.Warning(f"Translation is off while both languages are {translation_language}.")
+        else:
+            gr.Info("Translation is off. Please start a new chat to apply the new languages.")
+
+    def save_practice_language(practice_language, translation_language):
+        _notify_language_change(practice_language, translation_language)
+        return practice_language, gr.update(label=get_language_label(practice_language))
+
+    def save_translation_language(translation_language, practice_language):
+        _notify_language_change(practice_language, translation_language)
+        return translation_language
 
     gradio_app.load(
         restore_all,
-        inputs=[api_key_browser_state, chat_length_browser_state, show_en_translation_browser_state],
-        outputs=[api_key_input, api_key_state, chat_length_radio, show_en_translation_checkbox],
+        inputs=[
+            api_key_browser_state,
+            chat_length_browser_state,
+            practice_language_browser_state,
+            translation_language_browser_state,
+        ],
+        outputs=[
+            api_key_input,
+            api_key_state,
+            chat_length_radio,
+            practice_language_dropdown,
+            translation_language_dropdown,
+            chatbot,
+        ],
     )
 
     api_key_input.change(save_api_key, inputs=[api_key_input], outputs=[api_key_browser_state, api_key_state])
-    chat_length_radio.change(save_chat_length, inputs=[chat_length_radio], outputs=[chat_length_browser_state])
-    show_en_translation_checkbox.change(save_show_en_translation, inputs=[show_en_translation_checkbox], outputs=[show_en_translation_browser_state])
+    # .input() rather than .change() so restoring saved settings on load doesn't fire the toasts.
+    chat_length_radio.input(save_chat_length, inputs=[chat_length_radio], outputs=[chat_length_browser_state])
+    practice_language_dropdown.input(
+        save_practice_language,
+        inputs=[practice_language_dropdown, translation_language_dropdown],
+        outputs=[practice_language_browser_state, chatbot],
+    )
+    translation_language_dropdown.input(
+        save_translation_language,
+        inputs=[translation_language_dropdown, practice_language_dropdown],
+        outputs=[translation_language_browser_state],
+    )
 
     msg.submit(chat_send_user_answer, [msg, chatbot], [msg, chatbot], queue=False).then(
-        chat_send_assistant_answer, [chatbot, api_key_state, chat_length_radio, show_en_translation_checkbox], chatbot
+        chat_send_assistant_answer,
+        [chatbot, api_key_state, chat_length_radio, practice_language_dropdown, translation_language_dropdown],
+        chatbot,
     )
     submit_btn.click(chat_send_user_answer, [msg, chatbot], [msg, chatbot], queue=False).then(
-        chat_send_assistant_answer, [chatbot, api_key_state, chat_length_radio, show_en_translation_checkbox], chatbot
+        chat_send_assistant_answer,
+        [chatbot, api_key_state, chat_length_radio, practice_language_dropdown, translation_language_dropdown],
+        chatbot,
     )
     start_new_chat_btn.click(chat_clear_history, outputs=[chatbot], queue=False).then(
-        chat_start_new, inputs=[api_key_state, show_en_translation_checkbox], outputs=[chatbot]
+        chat_start_new,
+        inputs=[api_key_state, practice_language_dropdown, translation_language_dropdown],
+        outputs=[chatbot],
     )
 
 app = FastAPI()

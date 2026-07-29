@@ -3,29 +3,43 @@ from settings import *
 
 _model = "o4-mini"
 
-def _build_chat_system_message(chat_language, show_en_translation):
+def _build_chat_system_message(practice_language, translation_language):
+    translation_instruction = ""
+    if should_translate(practice_language, translation_language):
+        translation_instruction = (
+            f"5. After each of your messages, include the {translation_language} translation "
+            f"in parentheses starting with {get_language_flag(translation_language)} and a new line."
+        )
+
     return f"""
-    You are a friendly and patient {chat_language} language tutor.
-    Your goal is to help me practice short, natural conversations in ${chat_language}.
+    You are a friendly and patient {practice_language} language tutor.
+    Your goal is to help me practice short, natural conversations in {practice_language}.
 
     Instructions:
         1. Start by suggesting a simple, friendly conversation topic. Be creative!
-        2. Ask me one short question about this topic in {chat_language}. Keep it casual and natural.
+        2. Ask me one short question about this topic in {practice_language}. Keep it casual and natural.
         3. After each of my replies, ask a new short question on the same topic. Correct any mistakes I make, clearly and kindly.
         4. If my reply is off-topic, politely ignore it and ask your question again.
-        { "5. After each of your messages, include the English translation in parentheses starting with 🇬🇧 and a new line." if show_en_translation else "" }
+        { translation_instruction }
     Keep the conversation light, friendly, and supportive.
     """
 
-def _build_feedback_system_message(chat_language, show_en_translation):
+def _build_feedback_system_message(practice_language, translation_language):
+    translation_instruction = ""
+    if should_translate(practice_language, translation_language):
+        translation_instruction = (
+            f"3. Include the {translation_language} translation in parentheses "
+            f"starting with {get_language_flag(translation_language)} and a new line."
+        )
+
     return f"""
-    You are a friendly and patient {chat_language} language tutor.
+    You are a friendly and patient {practice_language} language tutor.
     Your goal is to provide a helpful feedback.
 
     Instructions:
         1. Provide detailed feedback on my replies: correctness, vocabulary, sentence length, and fluency.
         2. Give me a score from 0 to 100.
-        { "3. Include the English translation in parentheses starting with 🇬🇧 and a new line." if show_en_translation else "" }
+        { translation_instruction }
     """
 
 def _get_response(api_key, system_message, history):
@@ -58,20 +72,18 @@ def _get_response(api_key, system_message, history):
 def chat_clear_history():
     return []
 
-def chat_start_new(api_key, show_en_translation):
-    chat_language = get_current_chat_language()
+def chat_start_new(api_key, practice_language, translation_language):
     return _get_response(
         api_key,
-        _build_chat_system_message(chat_language, show_en_translation),
+        _build_chat_system_message(practice_language, translation_language),
         None,
     )
 
-def chat_send_assistant_answer(history, api_key, chat_length_value, show_en_translation):
+def chat_send_assistant_answer(history, api_key, chat_length_value, practice_language, translation_language):
     chat_length_reached = len([msg for msg in history if msg["role"] == "user"]) >= ChatLength(chat_length_value).to_int()
-    chat_language = get_current_chat_language()
     return _get_response(
         api_key,
-        _build_feedback_system_message(chat_language, show_en_translation) if chat_length_reached else _build_chat_system_message(chat_language, show_en_translation),
+        _build_feedback_system_message(practice_language, translation_language) if chat_length_reached else _build_chat_system_message(practice_language, translation_language),
         history
     )
 
