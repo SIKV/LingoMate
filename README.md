@@ -10,7 +10,9 @@ LingoMate is a simple, AI-powered chat app designed to help you learn and practi
 
 ### 🌐 Supported Languages
 
-- Spanish 🇪🇸 (for English speakers)
+Pick any pair on the Chat tab — one language to practice, another to translate into (or no translation at all):
+
+English 🇬🇧 · Spanish 🇪🇸 · French 🇫🇷 · German 🇩🇪 · Italian 🇮🇹 · Portuguese 🇵🇹 · Dutch 🇳🇱 · Swedish 🇸🇪 · Polish 🇵🇱 · Ukrainian 🇺🇦 · Turkish 🇹🇷 · Arabic 🇸🇦 · Hindi 🇮🇳 · Chinese (Mandarin) 🇨🇳 · Japanese 🇯🇵 · Korean 🇰🇷
 
 ### 🛠️ Tech Stack
 
@@ -25,5 +27,4 @@ LingoMate is a simple, AI-powered chat app designed to help you learn and practi
 
 ### 📈 Future Plans
 
-- Support more languages
 - Support speech synthesis (text-to-speech)
