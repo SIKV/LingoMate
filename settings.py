@@ -23,22 +23,27 @@ DEFAULT_PRACTICE_LANGUAGE = "Spanish"
 DEFAULT_TRANSLATION_LANGUAGE = NO_TRANSLATION
 
 _LANGUAGE_FLAGS = {
+    "Arabic": "🇸🇦",
+    "Czech": "🇨🇿",
+    "Danish": "🇩🇰",
+    "Dutch": "🇳🇱",
     "English": "🇬🇧",
-    "Spanish": "🇪🇸",
+    "Finnish": "🇫🇮",
     "French": "🇫🇷",
     "German": "🇩🇪",
+    "Greek": "🇬🇷",
+    "Hungarian": "🇭🇺",
     "Italian": "🇮🇹",
-    "Portuguese": "🇵🇹",
-    "Dutch": "🇳🇱",
-    "Swedish": "🇸🇪",
-    "Polish": "🇵🇱",
-    "Ukrainian": "🇺🇦",
-    "Turkish": "🇹🇷",
-    "Arabic": "🇸🇦",
-    "Hindi": "🇮🇳",
-    "Chinese (Mandarin)": "🇨🇳",
     "Japanese": "🇯🇵",
     "Korean": "🇰🇷",
+    "Norwegian": "🇳🇴",
+    "Polish": "🇵🇱",
+    "Portuguese": "🇵🇹",
+    "Romanian": "🇷🇴",
+    "Spanish": "🇪🇸",
+    "Swedish": "🇸🇪",
+    "Turkish": "🇹🇷",
+    "Ukrainian": "🇺🇦",
 }
 
 def get_language_flag(language):
