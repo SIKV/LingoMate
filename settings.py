@@ -1,17 +1,3 @@
-from enum import Enum
-
-class ChatLength(Enum):
-    SHORT = "Short (5 replies)"
-    MEDIUM = "Medium (10 replies)"
-    LONG = "Long (20 replies)"
-
-    def to_int(self) -> int:
-        return {
-            ChatLength.SHORT: 5,
-            ChatLength.MEDIUM: 10,
-            ChatLength.LONG: 20,
-        }[self]
-
 DEFAULT_MODEL = "gpt-5-mini"
 
 # (value, label) pairs. The value is the OpenAI model id sent to the API;
