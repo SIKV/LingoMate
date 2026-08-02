@@ -1,5 +1,6 @@
 from openai import OpenAI
-from settings import *
+from models import *
+from languages import *
 
 def _build_chat_system_message(practice_language, translation_language):
     feedback_language = translation_language if should_translate(practice_language, translation_language) else practice_language

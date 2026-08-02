@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "lingomate",
+      "runtimeExecutable": ".venv/bin/uvicorn",
+      "runtimeArgs": ["app:app", "--port", "7860"],
+      "port": 7860,
+      "url": "http://localhost:7860/"
+    }
+  ]
+}
