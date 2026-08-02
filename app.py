@@ -48,7 +48,11 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
                 filterable=True,
             )
 
-        start_new_chat_btn = gr.Button("✨ Start New Chat", variant="primary")
+        start_new_chat_btn = gr.Button(
+            "✨ Start New Chat", 
+            variant="primary", 
+            interactive=False,
+        )
 
         chatbot = gr.Chatbot(
             type="messages",
@@ -59,7 +63,7 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
 
         with gr.Row(equal_height=True):
             msg = gr.Textbox(placeholder="Type a message...", show_label=False)
-            submit_btn = gr.Button("Submit", scale=0, variant="primary")
+            submit_btn = gr.Button("Submit", scale=0, variant="primary", interactive=False)
 
     with gr.Tab("Settings"):
         model_dropdown = gr.Dropdown(
@@ -106,6 +110,11 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
         _notify_language_change(practice_language, translation_language)
         return translation_language
 
+    def toggle_btn(str):
+        return gr.Button(
+            interactive=bool(str.strip()),
+        )
+
     gradio_app.load(
         restore_all,
         inputs=[
@@ -125,29 +134,37 @@ with gr.Blocks(theme=theme, title="LingoMate") as gradio_app:
     )
 
     api_key_input.change(save_api_key, inputs=[api_key_input], outputs=[api_key_browser_state, api_key_state])
+    api_key_input.change(toggle_btn, inputs=[api_key_input], outputs=[start_new_chat_btn])
+
     # .input() rather than .change() so restoring saved settings on load doesn't fire the toasts.
     model_dropdown.input(save_model, inputs=[model_dropdown], outputs=[model_browser_state])
+
     practice_language_dropdown.input(
         save_practice_language,
         inputs=[practice_language_dropdown, translation_language_dropdown],
         outputs=[practice_language_browser_state, chatbot],
     )
+
     translation_language_dropdown.input(
         save_translation_language,
         inputs=[translation_language_dropdown, practice_language_dropdown],
         outputs=[translation_language_browser_state],
     )
 
+    msg.change(toggle_btn, inputs=[msg], outputs=[submit_btn])
+
     msg.submit(chat_send_user_answer, [msg, chatbot], [msg, chatbot], queue=False).then(
         chat_send_assistant_answer,
         [chatbot, api_key_state, model_dropdown, practice_language_dropdown, translation_language_dropdown],
         chatbot,
     )
+
     submit_btn.click(chat_send_user_answer, [msg, chatbot], [msg, chatbot], queue=False).then(
         chat_send_assistant_answer,
         [chatbot, api_key_state, model_dropdown, practice_language_dropdown, translation_language_dropdown],
         chatbot,
     )
+
     start_new_chat_btn.click(chat_clear_history, outputs=[chatbot], queue=False).then(
         chat_start_new,
         inputs=[api_key_state, model_dropdown, practice_language_dropdown, translation_language_dropdown],
